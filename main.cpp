@@ -2,6 +2,8 @@
 #include <cstdlib>
 #include <stack>
 #include <ctime>
+#include <vector>
+#include <string>
 
 #define NORTH 0
 #define SOUTH 1
@@ -14,11 +16,11 @@ int nGood = 0;
 int locX = 1, locY = 1;
 
 // print the maze
-void printGrid(char grid[10][10])
+void printGrid(vector<vector<char>> grid, int mazeSize)
 {
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < mazeSize; i++)
     {
-        for (int j = 0; j < 10; j++)
+        for (int j = 0; j < mazeSize; j++)
         {
             cout << grid[i][j];
         }
@@ -49,7 +51,7 @@ int moveNS(int direction, int y)
 }
 
 // check if is a valid position
-bool isValid(int x, int y, int direction, char grid[10][10])
+bool isValid(int x, int y, int direction, vector<vector<char>> grid, int mazeSize)
 {
     x = moveEW(direction, x);
     y = moveNS(direction, y);
@@ -57,10 +59,10 @@ bool isValid(int x, int y, int direction, char grid[10][10])
     // if the position is taken, or x and y are out of the grid then is not valid
     if (
             grid[y][x] == ' '
-            || x >= (10 - 1)
+            || x >= (mazeSize - 1)
             || x <= 0
             || y <= 0
-            || y >= (10 - 1)
+            || y >= (mazeSize - 1)
         )
         return false;
 
@@ -119,14 +121,67 @@ bool isValid(int x, int y, int direction, char grid[10][10])
     return false;
 }
 
+vector<vector<int>> generateRandomEntryAndExit(int mazeSize, vector<vector<char>> grid)
+{
+    vector<vector<int>> coords(mazeSize, vector<int>(mazeSize, 0));
+
+    // select the wall
+    srand(time(0));
+
+    // get random coordinates making sure that to entry and exit are different
+    do {
+
+        for (int i = 0; i < 2; ++i) {
+
+            int wall = rand() % 4;
+
+            if (wall == 0)
+            {
+                do {
+                    coords[i][0] = 0;
+                    coords[i][1] = rand() % mazeSize;
+                } while (grid[coords[i][0] + 1][coords[i][1]] != ' ');
+            }
+            else if (wall == 1)
+            {
+                do {
+                    coords[i][0] = mazeSize - 1;
+                    coords[i][1] = rand() % mazeSize;
+                } while (grid[coords[i][0] - 1][coords[i][1]] != ' ');
+            }
+            else if (wall == 2)
+            {
+                do {
+                    coords[i][0] = rand() % mazeSize;
+                    coords[i][1] = 0;
+                } while (grid[coords[i][0]][coords[i][1] + 1] != ' ');
+            }
+            else if (wall == 3)
+            {
+                do {
+                    coords[i][0] = rand() % mazeSize;
+                    coords[i][1] = mazeSize - 1;
+                } while (grid[coords[i][0]][coords[i][1] - 1] != ' ');
+            }
+        }
+    } while (coords[0] == coords[1]);
+
+    return coords;
+}
+
 int main()
 {
-    char grid[10][10];
+    // define the grid
+    int mazeSize;
+    cout << "Type the maze size: ";
+    cin >> mazeSize;
+    cout << endl;
+    vector<vector<char>> grid(mazeSize, vector<char>(mazeSize, 0));
 
     // init grid
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < mazeSize; i++)
     {
-        for (int j = 0; j < 10; ++j)
+        for (int j = 0; j < mazeSize; ++j)
         {
             grid[i][j] = '#';
         }
@@ -142,23 +197,21 @@ int main()
     nGood = 0;
     int direction;
 
-    grid[locY - 1][locX] = '-';
-
     do {
         // find n good moves
         for (int i = 0; i < 4; i++){
-            if (isValid(locX,locY,i,grid))
+            if (isValid(locX, locY, i, grid, mazeSize))
                 nGood++;
         }
         if (nGood == 1)
         {
-            if (isValid(locX, locY, NORTH, grid))
+            if (isValid(locX, locY, NORTH, grid, mazeSize))
                 locY = moveNS(NORTH, locY);
-            else if (isValid(locX, locY, SOUTH, grid))
+            else if (isValid(locX, locY, SOUTH, grid, mazeSize))
                 locY = moveNS(SOUTH, locY);
-            else if (isValid(locX, locY, EAST, grid))
+            else if (isValid(locX, locY, EAST, grid, mazeSize))
                 locX = moveEW(EAST, locX);
-            else if (isValid(locX, locY, WEST, grid))
+            else if (isValid(locX, locY, WEST, grid, mazeSize))
                 locX = moveEW(WEST, locX);
         }
         else if (nGood == 0)
@@ -176,9 +229,9 @@ int main()
             yValues.push(locY);
 
             //direction to move randomly chosen
-            do{
+            do {
                 direction = rand() % 4;
-            }while (!isValid(locX, locY, direction, grid));
+            } while (!isValid(locX, locY, direction, grid, mazeSize));
 
             locX = moveEW(direction,locX);
             locY = moveNS(direction,locY);
@@ -193,7 +246,14 @@ int main()
         //reset nGood value
         nGood = 0;
     } while (!xValues.empty());
+
+    // selecting a random entry and exit
+    vector<vector<int>> entryAndExitCoords(2, vector<int>(2, 0));
+    entryAndExitCoords = generateRandomEntryAndExit(mazeSize, grid);
+    grid[entryAndExitCoords[0][0]][entryAndExitCoords[0][1]] = 'I';
+    grid[entryAndExitCoords[1][0]][entryAndExitCoords[1][1]] = 'O';
+
     // final maze output
-    printGrid(grid);
+    printGrid(grid, mazeSize);
     return 0;
 }
