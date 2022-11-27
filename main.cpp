@@ -26,7 +26,7 @@ void printGrid(char grid[10][10])
     }
 }
 
-// move in the x axis
+// move in the x-axis
 int moveEW(int direction, int x)
 {
     if (direction == EAST)
@@ -37,7 +37,7 @@ int moveEW(int direction, int x)
         return x;
 }
 
-// move in the y axis
+// move in the y-axis
 int moveNS(int direction, int y)
 {
     if (direction == SOUTH)
@@ -142,6 +142,8 @@ int main()
     nGood = 0;
     int direction;
 
+    grid[locY - 1][locX] = '-';
+
     do {
         // find n good moves
         for (int i = 0; i < 4; i++){
@@ -191,7 +193,6 @@ int main()
         //reset nGood value
         nGood = 0;
     } while (!xValues.empty());
-    
     // final maze output
     printGrid(grid);
     return 0;
